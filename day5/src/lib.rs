@@ -1,4 +1,8 @@
-use std::{fs::read, io::BufRead};
+use std::{
+    cell::{Cell, RefCell},
+    fs::read,
+    io::BufRead,
+};
 
 fn input_lines() -> Vec<String> {
     read("in.txt")
@@ -19,7 +23,7 @@ fn parse_line(line: &str) -> Option<(usize, usize, usize)> {
     }
 }
 
-fn fetch_map(raw: Vec<String>) -> Vec<Vec<char>> {
+fn fetch_map(raw: Vec<String>) -> Vec<RefCell<Vec<char>>> {
     let mut res = Vec::new();
 
     raw.iter().rev().for_each(|line| {
@@ -29,10 +33,10 @@ fn fetch_map(raw: Vec<String>) -> Vec<Vec<char>> {
             .enumerate()
             .for_each(|(i, ch)| {
                 if i >= res.len() {
-                    res.push(Vec::new())
+                    res.push(RefCell::new(Vec::new()))
                 };
                 match ch {
-                    ch @ 'A'..='Z' => res[i].push(ch),
+                    ch @ 'A'..='Z' => res[i].borrow_mut().push(ch),
                     _ => return,
                 }
             })
@@ -41,7 +45,7 @@ fn fetch_map(raw: Vec<String>) -> Vec<Vec<char>> {
     res
 }
 
-fn read_input() -> (Vec<Vec<char>>, Vec<String>) {
+fn read_input() -> (Vec<RefCell<Vec<char>>>, Vec<String>) {
     let lines = input_lines();
     (
         fetch_map(lines.iter().take(8).cloned().collect()),
@@ -50,29 +54,35 @@ fn read_input() -> (Vec<Vec<char>>, Vec<String>) {
 }
 
 pub fn part1() -> String {
-    let (mut map, lines) = read_input();
+    let (map, lines) = read_input();
     lines
         .iter()
         .filter_map(|line| parse_line(line))
         .for_each(|(count, from, to)| {
-            let range = map[from - 1].len().saturating_sub(count)..;
-            let drained: Vec<char> = map[from - 1].drain(range).collect();
-            map[to - 1].extend(drained.iter().rev());
+            let range = map[from - 1].borrow().len().saturating_sub(count)..;
+            map[to - 1]
+                .borrow_mut()
+                .extend(map[from - 1].borrow_mut().drain(range).rev());
         });
-    map.iter().filter_map(|e| e.last()).collect::<String>()
+    map.iter()
+        .filter_map(|e| e.borrow().last().cloned())
+        .collect::<String>()
 }
 
 pub fn part2() -> String {
-    let (mut map, lines) = read_input();
+    let (map, lines) = read_input();
     lines
         .iter()
         .filter_map(|line| parse_line(line))
         .for_each(|(count, from, to)| {
-            let range = map[from - 1].len().saturating_sub(count)..;
-            let drained: Vec<char> = map[from - 1].drain(range).collect();
-            map[to - 1].extend(drained.iter());
+            let range = map[from - 1].borrow().len().saturating_sub(count)..;
+            map[to - 1]
+                .borrow_mut()
+                .extend(map[from - 1].borrow_mut().drain(range));
         });
-    map.iter().filter_map(|e| e.last()).collect::<String>()
+    map.iter()
+        .filter_map(|e| e.borrow().last().cloned())
+        .collect::<String>()
 }
 
 #[cfg(test)]
