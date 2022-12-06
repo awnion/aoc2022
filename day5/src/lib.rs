@@ -1,8 +1,4 @@
-use std::{
-    cell::{Cell, RefCell},
-    fs::read,
-    io::BufRead,
-};
+use std::{cell::RefCell, fs::read, io::BufRead};
 
 fn input_lines() -> Vec<String> {
     read("in.txt")
