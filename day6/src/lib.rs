@@ -15,10 +15,8 @@ fn fetch_input(input: Vec<String>) -> Vec<char> {
 fn find_marker(message: Vec<char>, n: usize) -> usize {
     message
         .windows(n)
-        .enumerate()
-        .find(|(_, window)| window.iter().collect::<HashSet<_>>().len() >= n)
+        .position(|window| window.iter().collect::<HashSet<_>>().len() >= n)
         .unwrap()
-        .0
         + n
 }
 
